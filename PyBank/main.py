@@ -1,72 +1,77 @@
-# Import Dependencies
-import os, csv
-from pathlib import Path 
+#Importing the necessary modules/libraries
+import os
+import csv
 
-# Declare file location through pathlib
-input_file = Path("python-challenge", "PyBank", "budget_data.csv")
+#Creating an object out of the CSV file
+budget_data = os.path.join("budget_data.csv")
 
-# Create empty lists to iterate through specific rows for the following variables
-total_months = []
-total_profit = []
-monthly_profit_change = []
- 
-# Open csv in default read mode with context manager
-with open(input_file,newline="", encoding="utf-8") as budget:
+total_months = 0
+total_pl = 0
+value = 0
+change = 0
+dates = []
+profits = []
 
-     # Store the contents of budget_data.csv in the variable csvreader
-    csvreader = csv.reader(budget,delimiter=",") 
+#Opening and reading the CSV file
+with open(budget_data, newline = "") as csvfile:
+    csvreader = csv.reader(csvfile, delimiter = ",")
 
-    # Skip the header labels to iterate with the values
-    header = next(csvreader)  
+    #Reading the header row
+    csv_header = next(csvreader)
 
-    # Iterate through the rows in the stored file contents
-    for row in csvreader: 
-
-        # Append the total months and total profit to their corresponding lists
-        total_months.append(row[0])
-        total_profit.append(int(row[1]))
-
-    # Iterate through the profits in order to get the monthly change in profits
-    for i in range(len(total_profit)-1):
-        
-        # Take the difference between two months and append to monthly profit change
-        monthly_profit_change.append(total_profit[i+1]-total_profit[i])
-        
-# Obtain the max and min of the the montly profit change list
-max_increase_value = max(monthly_profit_change)
-max_decrease_value = min(monthly_profit_change)
-
-# Correlate max and min to the proper month using month list and index from max and min
-#We use the plus 1 at the end since month associated with change is the + 1 month or next month
-max_increase_month = monthly_profit_change.index(max(monthly_profit_change)) + 1
-max_decrease_month = monthly_profit_change.index(min(monthly_profit_change)) + 1
-
-# Print Statements
-
-print("Financial Analysis")
-print("----------------------------")
-print(f"Total Months: {len(total_months)}")
-print(f"Total: ${sum(total_profit)}")
-print(f"Average Change: {round(sum(monthly_profit_change)/len(monthly_profit_change),2)}")
-print(f"Greatest Increase in Profits: {total_months[max_increase_month]} (${(str(max_increase_value))})")
-print(f"Greatest Decrease in Profits: {total_months[max_decrease_month]} (${(str(max_decrease_value))})")
-
-# Output files
-output_file = Path("python-challenge", "PyBank", "Financial_Analysis_Summary.txt")
-
-with open(output_file,"w") as file:
+    #Reading the first row (so that we track the changes properly)
+    first_row = next(csvreader)
+    total_months += 1
+    total_pl += int(first_row[1])
+    value = int(first_row[1])
     
-# Write methods to print to Financial_Analysis_Summary 
-    file.write("Financial Analysis")
-    file.write("\n")
-    file.write("----------------------------")
-    file.write("\n")
-    file.write(f"Total Months: {len(total_months)}")
-    file.write("\n")
-    file.write(f"Total: ${sum(total_profit)}")
-    file.write("\n")
-    file.write(f"Average Change: {round(sum(monthly_profit_change)/len(monthly_profit_change),2)}")
-    file.write("\n")
-    file.write(f"Greatest Increase in Profits: {total_months[max_increase_month]} (${(str(max_increase_value))})")
-    file.write("\n")
-    file.write(f"Greatest Decrease in Profits: {total_months[max_decrease_month]} (${(str(max_decrease_value))})")
+    #Going through each row of data after the header & first row 
+    for row in csvreader:
+        # Keeping track of the dates
+        dates.append(row[0])
+        
+        # Calculate the change, then add it to list of changes
+        change = int(row[1])-value
+        profits.append(change)
+        value = int(row[1])
+        
+        #Total number of months
+        total_months += 1
+
+        #Total net amount of "Profit/Losses over entire period"
+        total_pl = total_pl + int(row[1])
+
+    #Greatest increase in profits
+    greatest_increase = max(profits)
+    greatest_index = profits.index(greatest_increase)
+    greatest_date = dates[greatest_index]
+
+    #Greatest decrease (lowest increase) in profits 
+    greatest_decrease = min(profits)
+    worst_index = profits.index(greatest_decrease)
+    worst_date = dates[worst_index]
+
+    #Average change in "Profit/Losses between months over entire period"
+    avg_change = sum(profits)/len(profits)
+    
+
+#Displaying information
+print("Financial Analysis")
+print("---------------------")
+print(f"Total Months: {str(total_months)}")
+print(f"Total: ${str(total_pl)}")
+print(f"Average Change: ${str(round(avg_change,2))}")
+print(f"Greatest Increase in Profits: {greatest_date} (${str(greatest_increase)})")
+print(f"Greatest Decrease in Profits: {worst_date} (${str(greatest_decrease)})")
+
+#Exporing to .txt file
+output = open("output.txt", "w")
+
+line1 = "Financial Analysis"
+line2 = "---------------------"
+line3 = str(f"Total Months: {str(total_months)}")
+line4 = str(f"Total: ${str(total_pl)}")
+line5 = str(f"Average Change: ${str(round(avg_change,2))}")
+line6 = str(f"Greatest Increase in Profits: {greatest_date} (${str(greatest_increase)})")
+line7 = str(f"Greatest Decrease in Profits: {worst_date} (${str(greatest_decrease)})")
+output.write('{}\n{}\n{}\n{}\n{}\n{}\n{}\n'.format(line1,line2,line3,line4,line5,line6,line7))
